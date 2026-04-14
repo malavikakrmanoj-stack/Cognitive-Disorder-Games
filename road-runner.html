@@ -272,40 +272,72 @@ body {
 .countdown-num.pop { transform: scale(1.3); opacity: 0.6; }
 
 /* ── GAME SCREEN ── */
+/*
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║  ZOOM / LAYOUT FIX — HOW IT WORKS                          ║
+ * ║                                                              ║
+ * ║  Root cause: the road-wrapper had flex:1 with NO max-height, ║
+ * ║  so it expanded to fill all remaining space on tall phones,  ║
+ * ║  pushing the status msg + lane buttons below the viewport.   ║
+ * ║                                                              ║
+ * ║  Fix applied here (no transform:scale needed):               ║
+ * ║  1. .game-layout  → padding 4px, gap 4px  (was 8px/8px)     ║
+ * ║  2. .stat-box     → padding 4px  (was 6px)                  ║
+ * ║  3. .stat-value   → font clamp 15px (was 18px)              ║
+ * ║  4. .road-wrapper → max-height calc() cap so buttons always  ║
+ * ║                     stay on-screen                           ║
+ * ║  5. .lane-btn     → padding 12px (was 14px), min-height 50px ║
+ * ║  6. .status-msg   → min-height 18px (was 24px)              ║
+ * ║                                                              ║
+ * ║  To adjust further: tweak max-height in .road-wrapper below  ║
+ * ║  or change padding/gap in .game-layout.                      ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ */
 .game-layout {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  padding: 8px max(env(safe-area-inset-right),10px) 0 max(env(safe-area-inset-left),10px);
-  gap: 8px;
+  padding: 4px max(env(safe-area-inset-right),8px) 0 max(env(safe-area-inset-left),8px); /* ← was 8px 10px */
+  gap: 4px; /* ← was 8px */
 }
 
-.stats-bar { display: flex; gap: 6px; flex-shrink: 0; }
+.stats-bar { display: flex; gap: 5px; flex-shrink: 0; }
 
 .stat-box {
   background: var(--surface);
   border-radius: 10px;
-  padding: 6px 6px;
+  padding: 4px 6px; /* ← was 6px 6px */
   text-align: center;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
   flex: 1;
   transition: background 0.3s, border-color 0.3s;
 }
-.stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-light); font-weight: 600; }
-.stat-value { font-size: clamp(18px, 5vw, 24px); font-weight: 700; color: var(--text); line-height: 1.2; }
+.stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-light); font-weight: 600; }
+.stat-value { font-size: clamp(15px, 4vw, 20px); font-weight: 700; color: var(--text); line-height: 1.2; } /* ← was clamp(18px,5vw,24px) */
 
 /* ── ROAD AREA ── */
 .road-wrapper {
   flex: 1;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 6px 30px rgba(0,0,0,0.18);
   position: relative;
   background: #2d3748;
   min-height: 0;
+  /*
+   * ▼ KEY FIX: cap how tall the road canvas can grow.
+   *   Formula: 100dvh
+   *     minus header (~52px)
+   *     minus stats bar (~40px)
+   *     minus status msg (~22px)
+   *     minus lane buttons (~62px)
+   *     minus gaps & padding (~30px)
+   *   Adjust the last value (30px) to give more/less road height.
+   */
+  max-height: calc(100dvh - 52px - 40px - 22px - 62px - 30px);
   display: flex;
 }
 
@@ -315,7 +347,7 @@ body {
   position: absolute;
   inset: 0;
   background: rgba(225,112,85,0.0);
-  border-radius: 16px;
+  border-radius: 14px;
   pointer-events: none;
   transition: background 0.1s;
 }
@@ -326,7 +358,7 @@ body {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-  padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  padding-bottom: max(env(safe-area-inset-bottom), 10px); /* ← was 8px */
 }
 
 .lane-btn {
@@ -334,8 +366,8 @@ body {
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 14px;
-  padding: 14px 10px;
-  font-size: clamp(15px, 4vw, 18px);
+  padding: 12px 10px; /* ← was 14px 10px */
+  font-size: clamp(14px, 3.8vw, 17px); /* ← was clamp(15px,4vw,18px) */
   font-weight: 700;
   color: var(--text-light);
   display: flex;
@@ -344,7 +376,7 @@ body {
   gap: 6px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  min-height: 54px;
+  min-height: 50px; /* ← was 54px — still very finger-friendly */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition: transform 0.1s, background 0.15s, border-color 0.15s;
@@ -358,11 +390,11 @@ body {
 #btnRight, .btn-blue { color: #3182CE; background: rgba(49,130,206,0.10); border-color: rgba(49,130,206,0.45); }
 
 .status-msg {
-  font-size: clamp(13px, 3.5vw, 16px);
+  font-size: clamp(12px, 3vw, 15px); /* ← was clamp(13px,3.5vw,16px) */
   font-weight: 600;
   color: var(--text-light);
   text-align: center;
-  min-height: 24px;
+  min-height: 18px; /* ← was 24px */
   flex-shrink: 0;
 }
 .status-msg.danger { color: var(--accent); }
@@ -512,7 +544,7 @@ body {
 </style>
 </head>
 <body>
-<div id="ctg-zoom-wrap" style="min-height:100dvh;display:flex;flex-direction:column;transform-origin:top left;transform:scale(0.82);width:121.95%;">
+<div id="ctg-zoom-wrap" style="min-height:100dvh;display:flex;flex-direction:column;">
 
 <!-- ── HEADER (persistent) ── -->
 <div class="header">
@@ -1150,15 +1182,6 @@ function wireBtn(id, fn) {
 wireBtn('startBtn',     startCountdown);
 wireBtn('playAgainBtn', startCountdown);
 wireBtn('backToMenuBtn', goToMenu);
-</script>
-<script>
-// Road Runner: default to 82% zoom on first visit so the game fits mobile screens
-(function() {
-  var ZOOM_KEY = 'ctg-zoom';
-  if (!localStorage.getItem(ZOOM_KEY)) {
-    localStorage.setItem(ZOOM_KEY, '0.82');
-  }
-})();
 </script>
 <script src="shared.js" onerror="void 0"></script>
 </body>
