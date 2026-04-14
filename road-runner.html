@@ -350,8 +350,12 @@ body {
   transition: transform 0.1s, background 0.15s, border-color 0.15s;
 }
 .lane-btn:active { transform: scale(0.95); }
-.lane-btn.active-left  { color: #74B9FF; background: rgba(116,185,255,0.15); box-shadow: 0 2px 12px rgba(116,185,255,0.25); border-color: #74B9FF; }
-.lane-btn.active-right { color: #FD79A8; background: rgba(253,121,168,0.15); box-shadow: 0 2px 12px rgba(253,121,168,0.25); border-color: #FD79A8; }
+.lane-btn.active-left  { color: #E53E3E; background: rgba(229,62,62,0.22); box-shadow: 0 2px 16px rgba(229,62,62,0.35); border-color: #E53E3E; }
+.lane-btn.active-right { color: #3182CE; background: rgba(49,130,206,0.22); box-shadow: 0 2px 16px rgba(49,130,206,0.35); border-color: #3182CE; }
+
+/* Left button always red, right always blue */
+#btnLeft,  .btn-red  { color: #E53E3E; background: rgba(229,62,62,0.10); border-color: rgba(229,62,62,0.45); }
+#btnRight, .btn-blue { color: #3182CE; background: rgba(49,130,206,0.10); border-color: rgba(49,130,206,0.45); }
 
 .status-msg {
   font-size: clamp(13px, 3.5vw, 16px);
@@ -876,8 +880,8 @@ function highlightLane(lane) {
   const l = document.getElementById('btnLeft');
   const r = document.getElementById('btnRight');
   if (!l || !r) return;
-  l.className = 'lane-btn' + (lane === 'left'  ? ' active-left'  : '');
-  r.className = 'lane-btn' + (lane === 'right' ? ' active-right' : '');
+  l.className = 'lane-btn btn-red'  + (lane === 'left'  ? ' active-left'  : '');
+  r.className = 'lane-btn btn-blue' + (lane === 'right' ? ' active-right' : '');
 }
 
 // ─── SPAWN ──────────────────────────────────────────────────────────────────
