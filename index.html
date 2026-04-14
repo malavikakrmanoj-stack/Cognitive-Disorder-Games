@@ -65,73 +65,6 @@ body {
 }
 
 /* ═══════════════════════════════════════════
-   HEADER / NAV
-═══════════════════════════════════════════ */
-.top-nav {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  transition: background 0.3s, border-color 0.3s;
-}
-
-.nav-inner {
-  max-width: 680px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: max(env(safe-area-inset-top),10px) max(env(safe-area-inset-right),16px) 10px max(env(safe-area-inset-left),16px);
-  gap: 10px;
-}
-
-.nav-logo {
-  font-size: clamp(16px, 4.5vw, 20px);
-  font-weight: 800;
-  color: var(--text);
-  text-decoration: none;
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nav-link {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-light);
-  text-decoration: none;
-  padding: 7px 14px;
-  border-radius: 50px;
-  transition: background 0.18s, color 0.18s;
-  white-space: nowrap;
-}
-.nav-link:hover { background: var(--surface2); color: var(--text); }
-
-.settings-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  color: var(--text-light);
-  text-decoration: none;
-  font-size: 18px;
-  transition: background 0.18s, color 0.18s;
-}
-.settings-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-/* ═══════════════════════════════════════════
    HERO
 ═══════════════════════════════════════════ */
 .hero {
@@ -421,18 +354,6 @@ footer a:hover { text-decoration: underline; }
 
 <div id="ctg-zoom-wrap">
 
-  <!-- ── NAV ── -->
-  <nav class="top-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-logo">🧠 Cognitive Training</a>
-      <div class="nav-actions">
-        <a href="light-catcher.html" class="nav-link" style="display:none" id="nav-lc">Light Catcher</a>
-        <a href="road-runner.html"   class="nav-link" style="display:none" id="nav-rr">Road Runner</a>
-        <a href="settings.html" class="settings-btn" title="Settings">⚙️</a>
-      </div>
-    </div>
-  </nav>
-
   <!-- ── HERO ── -->
   <section class="hero">
     <span class="hero-emoji">🧠</span>
@@ -529,18 +450,6 @@ footer a:hover { text-decoration: underline; }
 
 <div class="ctg-toast" id="ctg-toast"></div>
 
-<script>
-// Show nav links on wider screens
-if (window.innerWidth >= 540) {
-  document.getElementById('nav-lc').style.display = '';
-  document.getElementById('nav-rr').style.display = '';
-}
-window.addEventListener('resize', function() {
-  var show = window.innerWidth >= 540;
-  document.getElementById('nav-lc').style.display = show ? '' : 'none';
-  document.getElementById('nav-rr').style.display = show ? '' : 'none';
-});
-</script>
 <script src="shared.js"></script>
 </body>
 </html>
