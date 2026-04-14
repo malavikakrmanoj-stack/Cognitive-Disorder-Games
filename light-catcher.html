@@ -626,15 +626,24 @@ body {
   }
 
   /* ── RESULTS ── */
-  .results-body { padding: 8px; }
-  .results-card { padding: 14px 16px; }
-  .results-emoji { font-size: 36px; }
-  .results-title { font-size: 20px; }
-  .results-msg { font-size: 13px; margin-bottom: 10px; }
-  .results-grid { gap: 6px; margin-bottom: 10px; }
-  .best-reaction { padding: 7px; margin-bottom: 10px; }
-  .btn-primary { min-height: 44px; font-size: 15px; }
-  .btn-secondary { min-height: 40px; font-size: 14px; }
+  .results-body { padding: 4px 8px; justify-content: flex-start; }
+  .results-card {
+    padding: 10px 14px;
+    transform: scale(0.72);
+    transform-origin: top center;
+    margin-bottom: -22%;
+  }
+  .results-emoji { font-size: 28px; margin-bottom: 4px; }
+  .results-title { font-size: 18px; margin-bottom: 2px; }
+  .results-msg { font-size: 12px; margin-bottom: 8px; }
+  .results-grid { gap: 5px; margin-bottom: 8px; }
+  .best-reaction { padding: 6px; margin-bottom: 8px; }
+  .result-stat { padding: 8px 6px; }
+  .result-stat .stat-label { font-size: 10px; }
+  .result-stat .stat-value { font-size: 18px; }
+  .btn-row { gap: 6px; }
+  .btn-primary { min-height: 40px; font-size: 14px; }
+  .btn-secondary { min-height: 36px; font-size: 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
