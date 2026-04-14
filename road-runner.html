@@ -512,7 +512,7 @@ body {
 </style>
 </head>
 <body>
-<div id="ctg-zoom-wrap" style="min-height:100dvh;display:flex;flex-direction:column;transform-origin:top center;">
+<div id="ctg-zoom-wrap" style="min-height:100dvh;display:flex;flex-direction:column;transform-origin:top left;transform:scale(0.82);width:121.95%;">
 
 <!-- ── HEADER (persistent) ── -->
 <div class="header">
@@ -1150,6 +1150,15 @@ function wireBtn(id, fn) {
 wireBtn('startBtn',     startCountdown);
 wireBtn('playAgainBtn', startCountdown);
 wireBtn('backToMenuBtn', goToMenu);
+</script>
+<script>
+// Road Runner: default to 82% zoom on first visit so the game fits mobile screens
+(function() {
+  var ZOOM_KEY = 'ctg-zoom';
+  if (!localStorage.getItem(ZOOM_KEY)) {
+    localStorage.setItem(ZOOM_KEY, '0.82');
+  }
+})();
 </script>
 <script src="shared.js" onerror="void 0"></script>
 </body>
