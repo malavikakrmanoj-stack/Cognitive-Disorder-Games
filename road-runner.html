@@ -568,18 +568,7 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* ── LANDSCAPE ZOOM: 80% on phones ── */
-@media (orientation: landscape) and (max-height: 500px) {
-  html {
-    /* CSS zoom shrinks everything uniformly — no layout side-effects */
-    zoom: 0.8;
-  }
-  /* Compensate: make the page fill the real viewport again */
-  body, #ctg-zoom-wrap {
-    height: calc(100vh / 0.8);
-    min-height: calc(100dvh / 0.8);
-  }
-}
+/* ── LANDSCAPE ZOOM: handled by JS transform:scale ── */
 </style>
 </head>
 <body>
@@ -1504,21 +1493,49 @@ wireBtn('backToMenuBtn', goToMenu);
 </script>
 <script src="shared.js" onerror="void 0"></script>
 <script>
-/* ── Landscape zoom: set viewport initial-scale to 0.8 on phone landscape ── */
+/* ── Landscape zoom: transform:scale to fit everything on screen ── */
 (function() {
-  var meta = document.getElementById('metaViewport');
-  function applyZoom() {
-    var isLandscape = window.innerWidth > window.innerHeight;
-    var isPhone = window.innerHeight <= 500 || window.innerWidth <= 900;
+  var wrap = document.getElementById('ctg-zoom-wrap');
+  var SCALE = 0.65; // zoom level — lower = more zoomed out
+
+  function applyLandscapeZoom() {
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var isLandscape = W > H;
+    var isPhone = H <= 520;
+
     if (isLandscape && isPhone) {
-      meta.setAttribute('content', 'width=device-width, initial-scale=0.8, viewport-fit=cover, user-scalable=no');
+      // Scale the entire wrapper down
+      wrap.style.transform = 'scale(' + SCALE + ')';
+      wrap.style.transformOrigin = 'top left';
+      wrap.style.width = (W / SCALE) + 'px';
+      wrap.style.height = (H / SCALE) + 'px';
+      wrap.style.position = 'absolute';
+      wrap.style.top = '0';
+      wrap.style.left = '0';
+      document.body.style.overflow = 'hidden';
+      document.body.style.width = W + 'px';
+      document.body.style.height = H + 'px';
     } else {
-      meta.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no');
+      // Reset
+      wrap.style.transform = '';
+      wrap.style.transformOrigin = '';
+      wrap.style.width = '';
+      wrap.style.height = '';
+      wrap.style.position = '';
+      wrap.style.top = '';
+      wrap.style.left = '';
+      document.body.style.overflow = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     }
   }
-  applyZoom();
-  window.addEventListener('orientationchange', function() { setTimeout(applyZoom, 100); });
-  window.addEventListener('resize', applyZoom);
+
+  applyLandscapeZoom();
+  window.addEventListener('resize', applyLandscapeZoom);
+  window.addEventListener('orientationchange', function() {
+    setTimeout(applyLandscapeZoom, 200);
+  });
 })();
 </script>
 </html>
