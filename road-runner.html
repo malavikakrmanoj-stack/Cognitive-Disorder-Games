@@ -3,7 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" id="metaViewport">
-
+<script>
+// Apply zoom=0.5 viewport for landscape phones ASAP before render
+(function(){
+  var meta = document.getElementById('metaViewport');
+  function check() {
+    var W = window.screen.width, H = window.screen.height;
+    var landscape = W > H;
+    var phone = Math.min(W,H) <= 500;
+    if (landscape && phone) {
+      meta.content = 'width=device-width, initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no, viewport-fit=cover';
+    } else {
+      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+    }
+  }
+  check();
+  window.addEventListener('orientationchange', function(){ setTimeout(check, 150); });
+})();
+</script>
 <title>Road Runner · Cognitive Training Games</title>
 <style>
 /* ═══ CSS VARIABLES ═══ */
@@ -143,7 +160,7 @@ body {
 
 /* Portrait: reserve space for fixed bottom controls */
 #gameScreen.active {
-  padding-bottom: calc(66px + max(env(safe-area-inset-bottom), 0px));
+  padding-bottom: calc(78px + max(env(safe-area-inset-bottom), 0px));
 }
 /* Landscape: buttons are inline so no bottom padding needed */
 body.ls-active #gameScreen.active { padding-bottom: 0; }
@@ -336,8 +353,8 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
   background: #2d3748;
   min-height: 0;
   /* Portrait: cap height so canvas never hides behind fixed buttons.
-     Header ~52px + stats ~32px + status ~16px + buttons ~66px + gaps ~8px = ~174px */
-  max-height: calc(100dvh - 174px);
+     Header ~52px + stats ~40px + status ~18px + buttons ~78px + gaps ~12px = ~200px */
+  max-height: calc(100dvh - 200px);
   display: flex;
   width: 100%;
 }
@@ -355,57 +372,54 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
 .collision-flash.flash { background: rgba(225,112,85,0.4); }
 
 /* ── TOUCH CONTROLS ── */
-/*
- * PORTRAIT: fixed bar at very bottom of viewport, always above safe area.
- * LANDSCAPE: inline below the canvas inside .game-layout (position:static).
- */
 .controls-row {
-  display: none;
-  flex-direction: row;
-  gap: 8px;
-  flex-shrink: 0;
-  /* Portrait default — fixed bar */
+  display: none; /* hidden until game starts */
+  gap: 10px;
+  /* Fixed at bottom — always visible, thumb-friendly */
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  padding: 8px max(env(safe-area-inset-right),10px) max(env(safe-area-inset-bottom),10px) max(env(safe-area-inset-left),10px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px max(env(safe-area-inset-right), 12px) max(env(safe-area-inset-bottom), 12px) max(env(safe-area-inset-left), 12px);
   background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 100;
   transition: background 0.3s;
+  flex-direction: row; /* SIDE BY SIDE — never stacked */
 }
 .controls-row.visible { display: flex; }
 
 .lane-btn {
   flex: 1;
-  border-radius: 12px;
-  padding: 12px 8px;
-  font-size: clamp(14px, 3.5vw, 17px);
+  border-radius: 14px;
+  padding: 14px 10px;
+  font-size: clamp(15px, 4vw, 18px);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 54px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition: transform 0.1s, opacity 0.15s;
   border: 2px solid transparent;
 }
-.lane-btn:active { transform: scale(0.96); opacity: 0.8; }
-.lane-btn.active-left  { box-shadow: 0 2px 16px rgba(229,62,62,0.5); }
-.lane-btn.active-right { box-shadow: 0 2px 16px rgba(49,130,206,0.5); }
+.lane-btn:active { transform: scale(0.95); opacity: 0.8; }
+.lane-btn.active-left  { box-shadow: 0 2px 20px rgba(229,62,62,0.5); }
+.lane-btn.active-right { box-shadow: 0 2px 20px rgba(49,130,206,0.5); }
 
 /* Left button always red, right always blue */
-#btnLeft,  .btn-red  { color: #fff; background: #E53E3E; border-color: #C53030; box-shadow: 0 2px 10px rgba(229,62,62,0.35); }
-#btnRight, .btn-blue { color: #fff; background: #3182CE; border-color: #2B6CB0; box-shadow: 0 2px 10px rgba(49,130,206,0.35); }
+#btnLeft,  .btn-red  { color: #fff; background: #E53E3E; border-color: #C53030; box-shadow: 0 2px 12px rgba(229,62,62,0.35); }
+#btnRight, .btn-blue { color: #fff; background: #3182CE; border-color: #2B6CB0; box-shadow: 0 2px 12px rgba(49,130,206,0.35); }
 
 .status-msg {
-  font-size: clamp(11px, 2.5vw, 14px);
+  font-size: clamp(12px, 3vw, 15px); /* ← was clamp(13px,3.5vw,16px) */
   font-weight: 600;
   color: var(--text-light);
   text-align: center;
-  min-height: 16px;
+  min-height: 18px; /* ← was 24px */
   flex-shrink: 0;
 }
 .status-msg.danger { color: var(--accent); }
@@ -474,115 +488,108 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
   transition: background 0.3s, border-color 0.3s;
 }
 
-/* ══ LANDSCAPE PHONES (height ≤ 500px) ══
- *
- * Layout goal: header (compact) → [stats-bar | road-canvas | status | buttons]
- * Everything stacked vertically, buttons BELOW the canvas, no right-col.
- * Canvas gets all remaining vertical space between stats and buttons.
- */
+/* ══ LANDSCAPE ══ */
 @media (orientation: landscape) and (max-height: 500px) {
+  /* Compact header */
+  .header { min-height: 40px; padding-top: max(env(safe-area-inset-top),4px); padding-bottom: 4px; }
+  .back-btn { min-height: 32px; font-size: 12px; padding: 4px 9px; }
+  .level-badge { font-size: 11px; padding: 3px 9px; }
+  .game-title { font-size: 15px; }
 
-  /* ── Compact header ── */
-  .header {
-    min-height: 36px;
-    padding-top: max(env(safe-area-inset-top), 3px);
-    padding-bottom: 3px;
-    padding-left:  max(env(safe-area-inset-left),  10px);
-    padding-right: max(env(safe-area-inset-right), 10px);
-  }
-  .back-btn    { min-height: 28px; font-size: 11px; padding: 3px 8px; }
-  .level-badge { font-size: 10px; padding: 2px 8px; }
-  .game-title  { font-size: 13px; }
-  .settings-link { width: 28px; height: 28px; font-size: 13px; }
-
-  /* Portrait bottom-padding on gameScreen not needed in landscape */
-  #gameScreen.active { padding-bottom: 0; }
-
-  /* ── Game layout: single column, no gaps wasted ── */
+  /* Game layout: road | right-col side by side */
   .game-layout {
-    flex-direction: column;
-    padding: 3px max(env(safe-area-inset-right), 6px) 3px max(env(safe-area-inset-left), 6px);
-    gap: 3px;
+    flex-direction: row;
+    padding: 5px max(env(safe-area-inset-right),6px) max(env(safe-area-inset-bottom),5px) max(env(safe-area-inset-left),6px);
+    gap: 6px;
     align-items: stretch;
-    overflow: hidden;
   }
 
-  /* ── Stats bar: horizontal, compact ── */
-  .stats-bar   { flex-direction: row; gap: 4px; flex-shrink: 0; }
-  .stat-box    { padding: 2px 5px; }
-  .stat-value  { font-size: clamp(12px, 2.4vh, 16px); }
-  .stat-label  { font-size: 7px; }
-
-  /* ── Road: flex:1 so it fills ALL remaining space between stats and buttons ── */
+  /* Road takes all leftover horizontal space */
   .road-wrapper {
     flex: 1;
+    border-radius: 10px;
     min-height: 0;
-    max-height: none;   /* cancel portrait cap */
-    border-radius: 8px;
-    width: 100%;
+    max-height: none;  /* cancel portrait cap */
+    height: 100%;
   }
 
-  /* ── Status message: tiny, one line ── */
-  .status-msg { font-size: 9px; min-height: 12px; }
+  /* Right column: stats + status + buttons stacked */
+  .right-col {
+    width: clamp(100px, 22vw, 140px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: space-between;
+  }
 
-  /* ── Controls: inline (not fixed), full-width row below canvas ── */
+  /* Stats stack vertically */
+  .stats-bar { flex-direction: column; gap: 4px; flex: 1; }
+  .stat-box { padding: 3px 5px; }
+  .stat-value { font-size: clamp(13px, 2.8vh, 18px); }
+  .stat-label { font-size: 8px; }
+  .status-msg { font-size: 10px; min-height: 14px; text-align: center; }
+
+  /* ── In landscape the buttons move INSIDE .right-col, NOT fixed ── */
   .controls-row {
-    position: static !important;
-    flex-direction: row !important;
+    position: static !important;    /* override fixed */
+    flex-direction: column !important;
     padding: 0 !important;
     background: transparent !important;
     border-top: none !important;
-    gap: 6px !important;
-    flex-shrink: 0;
+    gap: 5px !important;
     width: 100%;
   }
   .lane-btn {
-    min-height: 34px;
+    min-height: 0;
     flex: 1;
-    font-size: clamp(10px, 2vh, 13px);
+    font-size: clamp(11px, 2.4vh, 14px);
     padding: 0 6px;
-    border-radius: 8px;
+    border-radius: 10px;
     gap: 3px;
   }
 
-  /* ── Menu landscape ── */
+  /* Menu landscape */
   .menu-body {
     flex-direction: row; flex-wrap: nowrap; align-items: stretch; overflow: hidden;
-    padding: 5px max(env(safe-area-inset-right),8px) max(env(safe-area-inset-bottom),5px) max(env(safe-area-inset-left),8px);
+    padding: 6px max(env(safe-area-inset-right),8px) max(env(safe-area-inset-bottom),6px) max(env(safe-area-inset-left),8px);
     gap: 8px;
   }
-  .menu-hero { flex:1; min-width:0; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; border-radius:12px; }
-  .game-icon-big { width:40px; height:40px; margin:0 auto 5px; }
-  .menu-hero h1  { font-size:14px; margin-bottom:3px; }
-  .domain-tag    { font-size:10px; padding:2px 7px; margin-bottom:3px; }
-  .menu-desc     { font-size:11px; line-height:1.3; }
-  .menu-right-col { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:7px; }
-  .how-to { padding:8px 10px; border-radius:12px; }
-  .how-to h3  { font-size:10px; margin-bottom:5px; }
-  .how-to-row { font-size:11px; margin-bottom:5px; }
-  .key-badge  { font-size:12px; min-width:32px; padding:3px 6px; }
-  .start-btn  { flex-shrink:0; font-size:13px; min-height:36px; padding:8px; border-radius:9px; }
+  .menu-hero { flex:1; min-width:0; padding:10px 12px; display:flex; flex-direction:column; justify-content:center; border-radius:14px; }
+  .game-icon-big { width:44px; height:44px; margin:0 auto 6px; }
+  .menu-hero h1  { font-size:16px; margin-bottom:4px; }
+  .domain-tag    { font-size:11px; padding:2px 8px; margin-bottom:4px; }
+  .menu-desc     { font-size:12px; line-height:1.4; }
+  .menu-right-col { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+  .how-to { padding:10px 12px; border-radius:14px; }
+  .how-to h3  { font-size:11px; margin-bottom:6px; }
+  .how-to-row { font-size:12px; margin-bottom:6px; }
+  .key-badge  { font-size:13px; min-width:36px; padding:3px 7px; }
+  .start-btn  { flex-shrink:0; font-size:14px; min-height:40px; padding:10px; border-radius:10px; }
 
-  /* ── Results landscape ── */
-  .results-scroll { padding:3px 6px; justify-content:flex-start; }
-  .results-card { padding:8px 12px; transform:scale(0.68); transform-origin:top center; margin-bottom:-26%; }
-  .results-emoji { font-size:24px; margin-bottom:3px; }
-  .results-title { font-size:16px; margin-bottom:2px; }
-  .results-msg   { font-size:11px; margin-bottom:6px; }
-  .results-grid  { gap:4px; margin-bottom:6px; }
-  .result-stat   { padding:6px 5px; }
-  .result-stat .stat-label { font-size:9px; }
-  .result-stat .stat-value { font-size:16px; }
-  .btn-row { gap:5px; }
-  .btn-primary   { min-height:36px; font-size:13px; }
-  .btn-secondary { min-height:32px; font-size:12px; }
+  /* Results landscape */
+  .results-scroll { padding:4px 8px; justify-content:flex-start; }
+  .results-card { padding:10px 14px; transform:scale(0.72); transform-origin:top center; margin-bottom:-22%; }
+  .results-emoji { font-size:28px; margin-bottom:4px; }
+  .results-title { font-size:18px; margin-bottom:2px; }
+  .results-msg { font-size:12px; margin-bottom:8px; }
+  .results-grid { gap:5px; margin-bottom:8px; }
+  .result-stat { padding:8px 6px; }
+  .result-stat .stat-label { font-size:10px; }
+  .result-stat .stat-value { font-size:18px; }
+  .btn-row { gap:6px; }
+  .btn-primary { min-height:40px; font-size:14px; }
+  .btn-secondary { min-height:36px; font-size:13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* No zoom applied — layout adapts natively */
+/* ── LANDSCAPE ZOOM: viewport initial-scale=0.5 via JS + CSS zoom fallback ── */
+@media (orientation: landscape) and (max-height: 450px) {
+  html { zoom: 0.55; }
+}
 </style>
 </head>
 <body>
@@ -769,8 +776,7 @@ function resizeCanvas() {
 
   // Re-clamp car position after resize so it's never off-screen
   if (G && G.running) {
-    G.carY = Math.round(CANVAS_H * 0.92) - CAR_H();
-    G.carY = Math.max(G.carY, Math.round(CANVAS_H * 0.50));
+    G.carY = Math.min(G.carY, CANVAS_H - Math.round(CANVAS_H * 0.10));
     G.carX = G.carLane === 'left' ? LEFT_LANE_X : RIGHT_LANE_X;
     G.carTargetX = G.carX;
   }
@@ -785,20 +791,45 @@ function isLandscapeQuery() {
 
 function applyLandscapeLayout() {
   const isLandscape = isLandscapeQuery();
+  const layout      = document.getElementById('gameLayout');
   const controls    = document.getElementById('controlsRow');
-  const gameLayout  = document.getElementById('gameLayout');
-  if (!controls || !gameLayout) return;
+  if (!layout || !controls) return;
 
   if (isLandscape && !landscapeMode) {
-    // ── Enter landscape: move controls INSIDE game-layout so it's below canvas ──
+    // ── Enter landscape: build right-col with stats + status + buttons ──
     document.body.classList.add('ls-active');
-    gameLayout.appendChild(controls);   // append after status-msg
+
+    const col = document.createElement('div');
+    col.id = 'rightCol'; col.className = 'right-col';
+
+    const stats  = document.getElementById('statsBar');
+    const status = document.getElementById('statusMsg');
+    col.appendChild(stats);
+    col.appendChild(status);
+    // Move the controls row (buttons) into the col so they're inline
+    col.appendChild(controls);
+    layout.appendChild(col);
+
     landscapeMode = true;
 
   } else if (!isLandscape && landscapeMode) {
-    // ── Exit landscape: move controls back to body (fixed position) ──
+    // ── Exit landscape: restore portrait layout ──
     document.body.classList.remove('ls-active');
-    document.body.appendChild(controls);
+
+    const col = document.getElementById('rightCol');
+    if (col) {
+      // Pull controls back to body (fixed position restored by CSS)
+      document.body.appendChild(controls);
+
+      const stats  = document.getElementById('statsBar');
+      const road   = document.getElementById('roadWrapper');
+      const status = document.getElementById('statusMsg');
+      layout.innerHTML = '';
+      layout.appendChild(stats);
+      layout.appendChild(road);
+      layout.appendChild(status);
+      col.remove();
+    }
     landscapeMode = false;
   }
 
@@ -825,12 +856,9 @@ function updateLanePositions() {
   RIGHT_LANE_X = ROAD_LEFT + LANE_W + LANE_W / 2;
 }
 
-const CAR_W_F = 0.13, OBS_W_F = 0.14, OBS_H_F = 0.10;
-// CAR_H is derived from CAR_W using a fixed 2.0:1 aspect ratio (height:width)
-// so the car always looks like a proper top-down car, never squashed or stretched
-const CAR_ASPECT = 2.0;
+const CAR_W_F = 0.13, CAR_H_F = 0.17, OBS_W_F = 0.14, OBS_H_F = 0.10;
 function CAR_W() { return Math.round(CANVAS_W * CAR_W_F); }
-function CAR_H() { return Math.round(CAR_W() * CAR_ASPECT); }
+function CAR_H() { return Math.round(CANVAS_H * CAR_H_F); }
 function OBS_W() { return Math.round(CANVAS_W * OBS_W_F); }
 function OBS_H() { return Math.round(CANVAS_H * OBS_H_F); }
 
@@ -969,12 +997,9 @@ function startGame() {
         resizeCanvas(); // third pass — guarantees wrapper has final size
         G.carX        = LEFT_LANE_X;
         G.carTargetX  = LEFT_LANE_X;
-        // Place car so it sits fully inside the canvas bottom:
-        // carY is the top-left Y of the car, so bottom = carY + CAR_H
-        // We want bottom to be ~92% of canvas height
-        G.carY = Math.round(CANVAS_H * 0.92) - CAR_H();
-        // Safety clamp: never let car top go below 50% of canvas
-        G.carY = Math.max(G.carY, Math.round(CANVAS_H * 0.50));
+        G.carY        = CANVAS_H - Math.round(CANVAS_H * 0.18);
+        // Safety clamp: car must be at least 10% from bottom edge
+        G.carY = Math.min(G.carY, CANVAS_H - Math.round(CANVAS_H * 0.10));
         updateHUD(); setStatus('Dodge the obstacles!', '');
         highlightLane('left');
         G.running     = true;
@@ -1488,5 +1513,19 @@ wireBtn('playAgainBtn', startCountdown);
 wireBtn('backToMenuBtn', goToMenu);
 </script>
 <script src="shared.js" onerror="void 0"></script>
-
+<script>
+// Re-check viewport on resize (handles rotation after load)
+window.addEventListener('resize', function(){
+  var meta = document.getElementById('metaViewport');
+  if (!meta) return;
+  var W = window.screen.width, H = window.screen.height;
+  var landscape = W > H;
+  var phone = Math.min(W,H) <= 500;
+  if (landscape && phone) {
+    meta.content = 'width=device-width, initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no, viewport-fit=cover';
+  } else {
+    meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+  }
+});
+</script>
 </html>
