@@ -3,24 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" id="metaViewport">
-<script>
-// Apply zoom=0.5 viewport for landscape phones ASAP before render
-(function(){
-  var meta = document.getElementById('metaViewport');
-  function check() {
-    var W = window.screen.width, H = window.screen.height;
-    var landscape = W > H;
-    var phone = Math.min(W,H) <= 500;
-    if (landscape && phone) {
-      meta.content = 'width=device-width, initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no, viewport-fit=cover';
-    } else {
-      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
-    }
-  }
-  check();
-  window.addEventListener('orientationchange', function(){ setTimeout(check, 150); });
-})();
-</script>
+
 <title>Road Runner · Cognitive Training Games</title>
 <style>
 /* ═══ CSS VARIABLES ═══ */
@@ -353,8 +336,8 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
   background: #2d3748;
   min-height: 0;
   /* Portrait: cap height so canvas never hides behind fixed buttons.
-     Header ~52px + stats ~40px + status ~18px + buttons ~78px + gaps ~12px = ~200px */
-  max-height: calc(100dvh - 200px);
+     Header ~52px + stats ~36px + status ~18px + buttons ~68px + gaps ~10px = ~184px */
+  max-height: calc(100dvh - 184px);
   display: flex;
   width: 100%;
 }
@@ -586,10 +569,7 @@ body.ls-active #gameScreen.active { padding-bottom: 0; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* ── LANDSCAPE ZOOM: viewport initial-scale=0.5 via JS + CSS zoom fallback ── */
-@media (orientation: landscape) and (max-height: 450px) {
-  html { zoom: 0.55; }
-}
+/* No zoom applied — layout adapts natively */
 </style>
 </head>
 <body>
@@ -776,7 +756,8 @@ function resizeCanvas() {
 
   // Re-clamp car position after resize so it's never off-screen
   if (G && G.running) {
-    G.carY = Math.min(G.carY, CANVAS_H - Math.round(CANVAS_H * 0.10));
+    G.carY = Math.round(CANVAS_H * 0.92) - CAR_H();
+    G.carY = Math.max(G.carY, Math.round(CANVAS_H * 0.50));
     G.carX = G.carLane === 'left' ? LEFT_LANE_X : RIGHT_LANE_X;
     G.carTargetX = G.carX;
   }
@@ -1000,9 +981,12 @@ function startGame() {
         resizeCanvas(); // third pass — guarantees wrapper has final size
         G.carX        = LEFT_LANE_X;
         G.carTargetX  = LEFT_LANE_X;
-        G.carY        = CANVAS_H - Math.round(CANVAS_H * 0.18);
-        // Safety clamp: car must be at least 10% from bottom edge
-        G.carY = Math.min(G.carY, CANVAS_H - Math.round(CANVAS_H * 0.10));
+        // Place car so it sits fully inside the canvas bottom:
+        // carY is the top-left Y of the car, so bottom = carY + CAR_H
+        // We want bottom to be ~92% of canvas height
+        G.carY = Math.round(CANVAS_H * 0.92) - CAR_H();
+        // Safety clamp: never let car top go below 50% of canvas
+        G.carY = Math.max(G.carY, Math.round(CANVAS_H * 0.50));
         updateHUD(); setStatus('Dodge the obstacles!', '');
         highlightLane('left');
         G.running     = true;
@@ -1516,19 +1500,5 @@ wireBtn('playAgainBtn', startCountdown);
 wireBtn('backToMenuBtn', goToMenu);
 </script>
 <script src="shared.js" onerror="void 0"></script>
-<script>
-// Re-check viewport on resize (handles rotation after load)
-window.addEventListener('resize', function(){
-  var meta = document.getElementById('metaViewport');
-  if (!meta) return;
-  var W = window.screen.width, H = window.screen.height;
-  var landscape = W > H;
-  var phone = Math.min(W,H) <= 500;
-  if (landscape && phone) {
-    meta.content = 'width=device-width, initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no, viewport-fit=cover';
-  } else {
-    meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
-  }
-});
-</script>
+
 </html>
