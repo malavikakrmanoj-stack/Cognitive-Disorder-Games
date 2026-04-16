@@ -146,7 +146,7 @@ body {
 }
 @media (orientation: landscape) and (max-height: 600px) {
   #gameScreen.active {
-    padding-bottom: calc(50px + max(env(safe-area-inset-bottom), 0px));
+    padding-bottom: 0;
   }
 }
 
@@ -473,6 +473,14 @@ body {
 
 /* ══ LANDSCAPE ══ */
 @media (orientation: landscape) and (max-height: 600px) {
+  /* Scale the entire game down so car + buttons all fit on screen */
+  #ctg-zoom-wrap {
+    transform: scale(0.68);
+    transform-origin: top left;
+    width: calc(100vw / 0.68);
+    height: calc(100dvh / 0.68);
+  }
+
   .header { min-height: 44px; padding-top: max(env(safe-area-inset-top),5px); padding-bottom: 5px; }
   .back-btn { min-height: 34px; font-size: 13px; padding: 5px 10px; }
   .level-badge { font-size: 12px; padding: 4px 10px; }
@@ -485,8 +493,17 @@ body {
   .stat-box { padding: 4px 6px; }
   .stat-value { font-size: 16px; }
   .stat-label { font-size: 9px; }
-  .controls-row { flex-direction: row; padding: 4px max(env(safe-area-inset-right),8px) max(env(safe-area-inset-bottom),4px) max(env(safe-area-inset-left),8px); gap: 8px; }
-  .lane-btn { min-height: 36px; font-size: 13px; padding: 6px 8px; border-radius: 10px; }
+  /* Controls now inside zoom-wrap: switch from fixed to relative */
+  .controls-row {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    flex-direction: row;
+    padding: 6px 12px 8px 12px;
+    gap: 12px;
+  }
+  .lane-btn { min-height: 48px; font-size: 15px; padding: 10px 12px; border-radius: 12px; }
   .status-msg { font-size: 11px; }
 
   .menu-body {
@@ -680,8 +697,6 @@ body {
   </div>
 </div>
 
-</div><!-- /ctg-zoom-wrap -->
-
 <!-- ── FIXED BOTTOM CONTROLS (shown only during gameplay) ── -->
 <div class="controls-row" id="controlsRow">
   <button class="lane-btn btn-red active-left" id="btnLeft"
@@ -693,6 +708,8 @@ body {
     Right Lane →
   </button>
 </div>
+
+</div><!-- /ctg-zoom-wrap -->
 
 <script>
 // ─── THEME: apply immediately ───────────────────────────────────────────────
