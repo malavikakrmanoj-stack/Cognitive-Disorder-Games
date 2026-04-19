@@ -27,15 +27,26 @@
     localStorage.setItem(ZOOM_KEY, z);
     var w = document.getElementById('ctg-zoom-wrap');
     if (w) {
-      w.style.transform = 'scale(' + z + ')';
-      w.style.transformOrigin = 'top center';
-      w.style.width = Math.round(10000 / z) / 100 + '%';
-      if (isGamePage()) {
-        // Game pages: fixed viewport — no extra margin needed
+      if (Math.abs(z - 1) < 0.001) {
+        // No zoom — reset everything cleanly
+        w.style.transform = '';
+        w.style.transformOrigin = '';
+        w.style.width = '';
+        w.style.marginLeft = '';
         w.style.marginBottom = '';
       } else {
-        // Scrollable pages (index, settings): push content down so nothing clips
-        w.style.marginBottom = Math.round((z - 1) * 100) + 'px';
+        // Scale from top-left, then shift right by 50% of the difference
+        // so content stays horizontally centred at any zoom level
+        var offset = Math.round((1 - z) * 50 * 100) / 100;
+        w.style.transformOrigin = 'top left';
+        w.style.transform = 'scale(' + z + ') translateX(0)';
+        w.style.width = Math.round(10000 / z) / 100 + '%';
+        w.style.marginLeft = offset + 'vw';
+        if (isGamePage()) {
+          w.style.marginBottom = '';
+        } else {
+          w.style.marginBottom = Math.round((z - 1) * 100) + 'px';
+        }
       }
     }
     updateZoomUI(z);
