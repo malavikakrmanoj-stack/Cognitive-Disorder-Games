@@ -152,9 +152,11 @@ body {
 .screen { display: none; flex-direction: column; width: 100%; flex: 1; overflow: hidden; }
 .screen.active { display: flex; }
 
-/* Portrait: reserve space for fixed bottom controls */
+/* Portrait: no bottom padding needed — controls are inline in layout */
 #gameScreen.active {
-  padding-bottom: calc(100px + max(env(safe-area-inset-bottom), 0px));
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 /* Landscape: buttons are inline so no bottom padding needed */
 body.ls-active #gameScreen.active {
@@ -351,9 +353,9 @@ body.ls-active #gameScreen.active {
   position: relative;
   background: #2d3748;
   min-height: 0;
-  /* Portrait: cap height so canvas never hides behind fixed buttons.
-     Header ~52px + stats ~40px + status ~18px + buttons ~100px + gaps ~12px = ~222px */
-  max-height: calc(100dvh - 222px);
+  /* Portrait: cap height so canvas never pushes buttons off screen.
+     Header ~52px + stats ~38px + status ~18px + buttons ~80px + gaps ~16px = ~204px */
+  max-height: calc(100dvh - 204px);
   display: flex;
   width: 100%;
 }
@@ -374,17 +376,16 @@ body.ls-active #gameScreen.active {
 .controls-row {
   display: none; /* hidden until game starts */
   gap: 10px;
-  /* Fixed at bottom — always visible, thumb-friendly */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px max(env(safe-area-inset-right), 12px) max(env(safe-area-inset-bottom), 12px) max(env(safe-area-inset-left), 12px);
+  /* Inline in layout — scales with zoom, always fully visible */
+  position: relative;
+  width: 100%;
+  padding: 8px max(env(safe-area-inset-right), 10px) max(env(safe-area-inset-bottom), 10px) max(env(safe-area-inset-left), 10px);
   background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 100;
   transition: background 0.3s;
   flex-direction: row; /* SIDE BY SIDE — never stacked */
+  flex-shrink: 0;
 }
 .controls-row.visible { display: flex; }
 
@@ -786,6 +787,18 @@ body.ls-active #gameScreen.active {
     <div class="status-msg" id="statusMsg">Dodge the obstacles!</div>
 
   </div>
+
+  <!-- ── INLINE BOTTOM CONTROLS (inside zoom wrap, scales with page) ── -->
+  <div class="controls-row" id="controlsRow">
+    <button class="lane-btn btn-red active-left" id="btnLeft"
+      onclick="SoundEngine.init(); onInput('left')">
+      ← Left Lane
+    </button>
+    <button class="lane-btn btn-blue" id="btnRight"
+      onclick="SoundEngine.init(); onInput('right')">
+      Right Lane →
+    </button>
+  </div>
 </div>
 
 <!-- ══ RESULTS ══ -->
@@ -824,18 +837,6 @@ body.ls-active #gameScreen.active {
 </div>
 
 </div><!-- /ctg-zoom-wrap -->
-
-<!-- ── FIXED BOTTOM CONTROLS (shown only during gameplay) ── -->
-<div class="controls-row" id="controlsRow">
-  <button class="lane-btn btn-red active-left" id="btnLeft"
-    onclick="SoundEngine.init(); onInput('left')">
-    ← Left Lane
-  </button>
-  <button class="lane-btn btn-blue" id="btnRight"
-    onclick="SoundEngine.init(); onInput('right')">
-    Right Lane →
-  </button>
-</div>
 
 <!-- ── ZOOM CONTROLS ── -->
 <div class="zoom-controls" id="zoomControls">
@@ -926,16 +927,18 @@ function applyLandscapeLayout() {
 
     const col = document.getElementById('rightCol');
     if (col) {
-      document.body.appendChild(controls);
-
       const stats  = document.getElementById('statsBar');
       const road   = document.getElementById('roadWrapper');
       const status = document.getElementById('statusMsg');
+      const controls = document.getElementById('controlsRow');
+      const gameScreen = document.getElementById('gameScreen');
       layout.innerHTML = '';
       layout.appendChild(stats);
       layout.appendChild(road);
       layout.appendChild(status);
       col.remove();
+      // Put controls back inside gameScreen (after game-layout)
+      if (controls) gameScreen.appendChild(controls);
     }
     landscapeMode = false;
   }
