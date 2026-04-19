@@ -157,6 +157,9 @@ body {
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 /* Landscape: buttons are inline so no bottom padding needed */
 body.ls-active #gameScreen.active {
@@ -353,8 +356,8 @@ body.ls-active #gameScreen.active {
   position: relative;
   background: #2d3748;
   min-height: 0;
-  /* Portrait: cap height — header ~52px + stats ~34px + status ~18px + buttons ~50px + gaps ~14px = ~168px */
-  max-height: calc(100dvh - 168px);
+  /* Portrait: header~52 + stats~32 + status~18 + buttons~52 + gaps~20 = ~174px */
+  max-height: calc(100dvh - 174px);
   display: flex;
   width: 100%;
 }
@@ -374,16 +377,15 @@ body.ls-active #gameScreen.active {
 /* ── TOUCH CONTROLS ── */
 .controls-row {
   display: none; /* hidden until game starts */
-  gap: 10px;
-  /* Inline in layout — scales with zoom, always fully visible */
+  gap: 8px;
   position: relative;
   width: 100%;
-  padding: 5px max(env(safe-area-inset-right), 8px) max(env(safe-area-inset-bottom), 6px) max(env(safe-area-inset-left), 8px);
+  padding: 6px 8px 8px 8px;
   background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 100;
   transition: background 0.3s;
-  flex-direction: row; /* SIDE BY SIDE — never stacked */
+  flex-direction: row;
   flex-shrink: 0;
 }
 .controls-row.visible { display: flex; }
@@ -693,7 +695,7 @@ body.ls-active #gameScreen.active {
 </style>
 </head>
 <body>
-<div id="ctg-zoom-wrap" style="min-height:100dvh;display:flex;flex-direction:column;">
+<div id="ctg-zoom-wrap" style="height:100dvh;height:100vh;display:flex;flex-direction:column;overflow:hidden;">
 
 <!-- ── HEADER (persistent) ── -->
 <div class="header">
@@ -786,18 +788,18 @@ body.ls-active #gameScreen.active {
 
     <div class="status-msg" id="statusMsg">Dodge the obstacles!</div>
 
-  </div>
+    <!-- ── CONTROLS inside game-layout — always visible in both orientations ── -->
+    <div class="controls-row" id="controlsRow">
+      <button class="lane-btn btn-red active-left" id="btnLeft"
+        onclick="SoundEngine.init(); onInput('left')">
+        ← Left Lane
+      </button>
+      <button class="lane-btn btn-blue" id="btnRight"
+        onclick="SoundEngine.init(); onInput('right')">
+        Right Lane →
+      </button>
+    </div>
 
-  <!-- ── INLINE BOTTOM CONTROLS (inside zoom wrap, scales with page) ── -->
-  <div class="controls-row" id="controlsRow">
-    <button class="lane-btn btn-red active-left" id="btnLeft"
-      onclick="SoundEngine.init(); onInput('left')">
-      ← Left Lane
-    </button>
-    <button class="lane-btn btn-blue" id="btnRight"
-      onclick="SoundEngine.init(); onInput('right')">
-      Right Lane →
-    </button>
   </div>
 </div>
 
@@ -1603,7 +1605,7 @@ window.addEventListener('resize', function(){
       wrap.style.height          = '';
       wrap.style.marginLeft      = '';
     } else if (isLandscape) {
-      // Landscape: scale from top-left + margin offset to re-centre
+      // Landscape: top-left origin + margin offset to re-centre
       var offset = Math.round((1 - currentZoom) * 50 * 100) / 100;
       wrap.style.transformOrigin = 'top left';
       wrap.style.transform       = 'scale(' + currentZoom + ')';
@@ -1611,24 +1613,23 @@ window.addEventListener('resize', function(){
       wrap.style.height          = (100 / currentZoom).toFixed(4) + 'vh';
       wrap.style.marginLeft      = offset + 'vw';
     } else {
-      // Portrait: scale from top-centre — content stays centred, no gap
+      // Portrait: top-center origin — stays centred, compensate width overflow with negative margin
       wrap.style.transformOrigin = 'top center';
       wrap.style.transform       = 'scale(' + currentZoom + ')';
       wrap.style.width           = (100 / currentZoom).toFixed(4) + '%';
-      wrap.style.height          = (100 / currentZoom).toFixed(4) + 'vh';
+      // Do NOT expand height in portrait — the body is overflow:hidden so it clips correctly
+      wrap.style.height          = '';
       wrap.style.marginLeft      = (-((1 / currentZoom - 1) / 2 * 100)).toFixed(4) + '%';
     }
 
     if (label) label.textContent = Math.round(currentZoom * 100) + '%';
     localStorage.setItem(ZOOM_KEY, currentZoom.toString());
 
-    // Update button disabled state
     var inBtn  = document.getElementById('zoomInBtn');
     var outBtn = document.getElementById('zoomOutBtn');
     if (inBtn)  inBtn.style.opacity  = currentZoom >= ZOOM_MAX ? '0.35' : '1';
     if (outBtn) outBtn.style.opacity = currentZoom <= ZOOM_MIN ? '0.35' : '1';
 
-    // Re-size canvas after zoom shift
     setTimeout(resizeCanvas, 60);
   }
 
@@ -1639,10 +1640,10 @@ window.addEventListener('resize', function(){
     else         el.classList.remove('visible');
   }
 
-  // Show zoom controls only in landscape; also re-apply zoom for correct centering
+  // Re-apply zoom on orientation change so portrait/landscape branch switches correctly
   function updateZoomVisibility() {
     showZoomControls(isLandscapeQuery());
-    applyZoom(currentZoom); // re-run so portrait/landscape branch is re-evaluated
+    applyZoom(currentZoom);
   }
 
   window.addEventListener('resize',            updateZoomVisibility);
