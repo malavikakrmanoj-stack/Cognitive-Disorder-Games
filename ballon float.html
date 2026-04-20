@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balloon Float</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial;
+  background: #f7f7f7;
+  color: #222;
+  text-align: center;
+}
+
+/* WELCOME */
+#welcomeScreen {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-card {
+  background: #fff;
+  padding: 28px;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* AGE INPUT */
+#ageInput {
+  width: 100%;
+  padding: 14px;
+  font-size: 1.1em;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+/* START BUTTON */
+.start-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+  font-size: 1.1em;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #000, #333);
+  color: #fff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.start-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* COUNTDOWN */
+#countdown {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:4em;
+  background: rgba(255,255,255,0.9);
+}
+
+/* GAME */
+#gameScreen { display:none; }
+
+#topBar {
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  background:#fff;
+}
+
+#gameArea {
+  height:60vh;
+  position:relative;
+  background:#fafafa;
+}
+
+#escapeLine {
+  position:absolute;
+  top:15%;
+  width:100%;
+  border-top:2px dashed #aaa;
+}
+
+/* BALLOON */
+.balloon {
+  position:absolute;
+  width:38px;
+  height:52px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#ff4d4d,#b30000);
+}
+
+.left { left:18%; }
+.right { right:18%; }
+
+/* CONTROLS */
+#controls {
+  display:flex;
+  justify-content:space-around;
+  margin-top:20px;
+}
+
+.control-btn {
+  width:130px;
+  height:70px;
+  font-size:2.2em;
+  font-weight:bold;
+  border:none;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.left-btn { background:orange; }
+.right-btn { background:#007bff; color:white; }
+
+/* ✅ FIX: spacing added */
+#controls {
+  margin-bottom: 20px;
+}
+
+#gameScreen > div:last-child {
+  margin-top: 15px;
+  font-size: 1em;
+}
+
+/* RESULT */
+#resultScreen {
+  display:none;
+  height:100vh;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+.retry-btn {
+  margin-top:15px;
+  padding:12px 20px;
+  background:black;
+  color:white;
+  border:none;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- WELCOME -->
+<div id="welcomeScreen">
+  <div class="welcome-card">
+    <h1>🎈 Balloon Float</h1>
+    <p>Catch balloons before they cross the line</p>
+
+    <input id="ageInput" type="number" placeholder="Enter age">
+
+    <button class="start-btn" onclick="initSound(); startCountdown()">Start Game</button>
+  </div>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown">3</div>
+
+<!-- GAME -->
+<div id="gameScreen">
+  <div id="topBar">
+    <div>Score: <span id="score">0</span></div>
+    <div>Time: <span id="time">120</span>s</div>
+  </div>
+
+  <div id="gameArea">
+    <div id="escapeLine"></div>
+  </div>
+
+  <div id="controls">
+    <button class="control-btn left-btn" onclick="handleInput('left')">LEFT</button>
+    <button class="control-btn right-btn" onclick="handleInput('right')">RIGHT</button>
+  </div>
+
+  <div>
+    Caught: <span id="caught">0</span> |
+    Missed: <span id="missed">0</span>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="resultScreen">
+  <h2 id="resultText"></h2>
+  <button class="retry-btn" onclick="restartGame()">Try Again</button>
+</div>
+
+<script>
+let ctx, enabled=false;
+
+function initSound(){
+  if(enabled) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  ctx.resume();
+  enabled=true;
+}
+
+function play(freq){
+  let o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value=freq;
+  g.gain.value=0.25;
+  o.connect(g); g.connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime+0.2);
+}
+
+function playLeft(){ play(400); }
+function playRight(){ play(700); }
+function miss(){ play(200); }
+function gameOver(){ play(300); }
+
+/* COUNTDOWN */
+let userAge=0;
+
+function startCountdown(){
+  let age = document.getElementById("ageInput").value;
+  if(!age){ alert("Enter age"); return; }
+
+  userAge = parseInt(age);
+
+  welcomeScreen.style.display="none";
+  countdown.style.display="flex";
+
+  let count=3;
+  countdown.innerText=count;
+
+  let interval=setInterval(()=>{
+    count--;
+    if(count===0){
+      clearInterval(interval);
+      countdown.style.display="none";
+      startGame();
+    } else {
+      countdown.innerText=count;
+    }
+  },1000);
+}
+
+/* GAME */
+let score=0, missed=0, caught=0, time=120;
+let balloons=[], spawnInt, gameInt;
+let reactionTimes=[];
+
+function startGame(){
+  gameScreen.style.display="block";
+  gameInt=setInterval(updateGame,1000);
+  spawnBalloons();
+}
+
+function updateGame(){
+  time--;
+  document.getElementById("time").textContent=time;
+
+  if(time<=0 || missed>=10) endGame();
+}
+
+function getAgeRange(age){
+  if(age <= 40) return [250, 400];
+  if(age <= 60) return [300, 500];
+  if(age <= 75) return [350, 600];
+  return [400, 750];
+}
+
+function spawnBalloons(){
+  spawnInt=setInterval(()=>{
+    let side=Math.random()<0.5?'left':'right';
+    let el=document.createElement("div");
+    el.className="balloon "+side;
+    el.style.bottom="0%";
+
+    gameArea.appendChild(el);
+
+    let obj={el,side,pos:0,startTime:Date.now()};
+    balloons.push(obj);
+
+    moveBalloon(obj);
+  },2000);
+}
+
+function moveBalloon(obj){
+  obj.interval=setInterval(()=>{
+    obj.pos+=1;
+    obj.el.style.bottom=obj.pos+"%";
+
+    let balloonRect=obj.el.getBoundingClientRect();
+    let lineRect=escapeLine.getBoundingClientRect();
+
+    if(balloonRect.top <= lineRect.bottom){
+      clearInterval(obj.interval);
+      removeBalloon(obj,false);
+    }
+  },30);
+}
+
+function handleInput(side){
+  if(side==='left') playLeft();
+  else playRight();
+
+  let list=balloons.filter(b=>b.side===side);
+  if(!list.length) return;
+
+  let lowest=list.reduce((a,b)=>a.pos<b.pos?a:b);
+  clearInterval(lowest.interval);
+
+  let reactionTime = Date.now() - lowest.startTime;
+  reactionTimes.push(reactionTime);
+
+  removeBalloon(lowest,true);
+}
+
+function removeBalloon(obj,isCaught){
+  obj.el.remove();
+  balloons=balloons.filter(b=>b!==obj);
+
+  if(isCaught){ score++; caught++; }
+  else { missed++; miss(); }
+
+  document.getElementById("score").textContent=score;
+  document.getElementById("caught").textContent=caught;
+  document.getElementById("missed").textContent=missed;
+}
+
+function endGame(){
+  clearInterval(gameInt);
+  clearInterval(spawnInt);
+  gameOver();
+
+  gameScreen.style.display="none";
+  resultScreen.style.display="flex";
+
+  let avg = reactionTimes.length
+    ? Math.round(reactionTimes.reduce((a,b)=>a+b,0)/reactionTimes.length)
+    : 0;
+
+  let [min,max] = getAgeRange(userAge);
+  let typicalAvg = Math.round((min+max)/2);
+
+  let status="";
+  if(avg < min) status="Good response speed 👍";
+  else if(avg <= max) status="Within expected range ✅";
+  else status="Slightly slower than average 🌿";
+
+  document.getElementById("resultText").innerText =
+    "Game Over\n\n"+
+    "Score: "+score+
+    "\nYour Avg Reaction: "+avg+" ms"+
+    "\nTypical for your age: ~"+typicalAvg+" ms"+
+    "\nExpected Range: "+min+" - "+max+" ms\n\n"+
+    status;
+}
+
+function restartGame(){
+  score = 0;
+  missed = 0;
+  caught = 0;
+  time = 120;
+  balloons = [];
+  reactionTimes = [];
+
+  document.getElementById("score").textContent = 0;
+  document.getElementById("caught").textContent = 0;
+  document.getElementById("missed").textContent = 0;
+  document.getElementById("time").textContent = 120;
+
+  gameArea.innerHTML = '<div id="escapeLine"></div>';
+
+  resultScreen.style.display = "none";
+  gameScreen.style.display = "block";
+
+  gameInt = setInterval(updateGame,1000);
+  spawnBalloons();
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft") handleInput("left");
+  if(e.key==="ArrowRight") handleInput("right");
+});
+</script>
+
+</body>
+</html>
