@@ -6,6 +6,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+  :root {
+  --surface: #ffffff;
+  --surface2: #f0ede8;
+  --text: #2d3436;
+  --border: #e0dbd5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(env(safe-area-inset-top), 8px)
+    max(env(safe-area-inset-right), 12px) 8px
+    max(env(safe-area-inset-left), 12px);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  min-height: 52px;
+}
+
+.back-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 38px;
+}
+
+.header-title {
+  font-size: clamp(15px, 4vw, 18px);
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.header-spacer {
+  /* mirrors back-btn width to keep title centred */
+  min-width: 70px;
+}
 body{
   margin:0;
   font-family:Arial;
